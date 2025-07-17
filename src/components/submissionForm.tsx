@@ -2,71 +2,46 @@
 
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import React from "react";
+import React, { useState } from "react";
 import toast from "react-hot-toast";
 import Quizzes from "./quizForm";
 
-// export default async function SubmissionForm() {
-// 	async function action(formData: FormData) {
-// 		"use server";
-// 		const file = formData.get("file") as File;
-// 		console.log(file);
-
-// 		if (!file || file.size === 0) {
-// 			return { error: "No file uploaded." }
-// 		}
-
-// 		const data = await file.arrayBuffer();
-// 		await fs.writeFile(`${process.cwd}/tmp/${file.name}`, Buffer.from(data));
-// 	} 
-
-// 	return (
-// 		<div>
-// 		<form action={action}>
-// 			<Input type="file" name="file" accept=".pdf"/>
-// 			<Button>Upload</Button>
-// 		</form>
-// 		</div>
-// 	);
-// }
-
 function SubmissionForm() {
-    const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+	const [fileID, setFileID] = useState<string | null>(null);
+
+	// Hide Quizzes component by default
+    const [showComponent, setShowComponent] = useState(false);
+
+    const handleFileChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
         const file = e.target.files?.[0];
         if (file) {
-            toast.success(`File ${file.name} uploaded successfully`);
+			if (file.type == "application/pdf") {
+				// Send file to /api/upload-file in formData file format
+				const formData = new FormData();
+				formData.append("file", file);
+				const response = await fetch("/api/upload-file", {
+					method: "POST",
+					body: formData
+				});
+				const data = await response.json();
+				if (response.status === 200) {
+					// Success
+					setFileID(data.fileID);
+					toast.success(`File ${file.name} ${data.fileID} uploaded successfully.`);
+					setShowComponent(true);
+				} else {
+					toast.error("Failed to upload file.");
+				}
+			} else {
+				toast.error("Incorrect file. Only PDFs can be uploaded.")
+			}
         }
     }
 
   	return (
 		<div>
 			<Input type="file" name="file" accept=".pdf" onChange={handleFileChange}/>
-			<Quizzes />
-
-			{/* <input
-				type="radio"
-				name="quiz_generator_tabs"
-				className="tab"
-				aria-label="Educator"
-				defaultChecked
-			/>
-			<div className="tab-content bg-base-100 border-base-300 p-6">
-				<fieldset className="fieldset">
-				<legend className="fieldset-legend">Pick a file</legend>
-				<input type="file" className="file-input" onChange={handleFileChange} />
-				<label className="label">Max size 32MB</label>
-				</fieldset>
-			</div>
-
-			<input
-				type="radio"
-				name="quiz_generator_tabs"
-				className="tab"
-				aria-label="Student"
-			/>
-			<div className="tab-content bg-base-100 border-base-300 p-6">
-				Tab content 2
-			</div> */}
+			{showComponent && <Quizzes />}
 		</div>
   	);
 }
