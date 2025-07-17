@@ -2,6 +2,9 @@
 
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import React from "react";
+import toast from "react-hot-toast";
+import Quizzes from "./quizForm";
 
 // export default async function SubmissionForm() {
 // 	async function action(formData: FormData) {
@@ -27,10 +30,6 @@ import { Input } from "@/components/ui/input";
 // 	);
 // }
 
-
-import React from "react";
-import toast from "react-hot-toast";
-
 function SubmissionForm() {
     const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
         const file = e.target.files?.[0];
@@ -38,10 +37,12 @@ function SubmissionForm() {
             toast.success(`File ${file.name} uploaded successfully`);
         }
     }
-	
+
   	return (
 		<div>
 			<Input type="file" name="file" accept=".pdf" onChange={handleFileChange}/>
+			<Quizzes />
+
 			{/* <input
 				type="radio"
 				name="quiz_generator_tabs"
