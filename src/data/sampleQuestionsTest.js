@@ -8,8 +8,7 @@ const questions = [
             "September 17, 2011",
             "October 26, 2011"
         ],
-        answer: "February 10, 2013",
-        difficulty: "medium"
+        answer: "February 10, 2013"
     },
     {
         id: 2,
@@ -20,8 +19,7 @@ const questions = [
             "5,017 kg",
             "1,507 kg"
         ],
-        answer: "1,075 kg",
-        difficulty: "hard"
+        answer: "1,075 kg"
     },
     {
         id: 3,
@@ -32,8 +30,7 @@ const questions = [
             "29 years old",
             "50 years old"
         ],
-        answer: "50 years old",
-        difficulty: "medium"
+        answer: "50 years old"
     },
 	{
         id: 4,
@@ -44,8 +41,7 @@ const questions = [
             "7.3 m",
             "8.8 m"
         ],
-        answer: "6.17 m",
-        difficulty: "medium"
+        answer: "6.17 m"
     },
 	{
         id: 5,
@@ -56,8 +52,7 @@ const questions = [
             "Rowena Romano",
             "Ernesto Coñate"
         ],
-        answer: "Ernesto Coñate",
-        difficulty: "hard"
+        answer: "Ernesto Coñate"
     },
 ]
 

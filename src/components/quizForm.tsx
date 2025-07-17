@@ -1,7 +1,8 @@
 import React from 'react'
-import questions from '@/data/sampleQuestionsTest'
+// import questions from '@/data/sampleQuestionsTest'
+import { Question } from '@/lib/utils'
 
-function Quizzes() {
+function Quizzes({questions}: {questions: Question[] }) {
   return (
     <div className='flex flex-col gap-8'>
         {questions.map((question) => (
