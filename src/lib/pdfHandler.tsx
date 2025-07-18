@@ -9,41 +9,42 @@ export const assertFileIsPdf = z.object({
     })
 });
 
-export async function parsePdf(file: File): Promise<{success: boolean; message?: string; context?: string;}> {
-	// Check if it's running in a browser environment
+export async function parsePdfFile(file: File): Promise<{success: boolean; message?: string; context?: string;}> {
+	const MAX_PAGES = parseInt(process.env.MAX_PDF_PAGES || "");
 	const isBrowser = typeof window !== "undefined";
 
-	if (!isBrowser) {
-		return {
-			success: false,
-			message: 'parsePdf must be run in the browser.',
-		};
-	}
+	// Check if it's running in a browser environment
+	if (isBrowser) {
+		GlobalWorkerOptions.workerSrc = '/pdf.worker.min.js';
+		const arrayBuffer = await file.arrayBuffer();
+		const pdf = await getDocument({ data: arrayBuffer }).promise;
 
-	GlobalWorkerOptions.workerSrc = '/pdf.worker.min.js';
-	const arrayBuffer = await file.arrayBuffer();
-	const pdf = await getDocument({ data: arrayBuffer }).promise;
+		// Checks if the PDF exceeds 10 pages and returns an error if it has.		
+		if (pdf.numPages > MAX_PAGES) {
+			return {
+				success: false,
+				message: 'PDF must not have more than 10 Pages.',
+			};
+		}
+		
+		let fullText = '';
+		for (let i = 1; i <= pdf.numPages; i++) {
+			const page = await pdf.getPage(i);
+			const text = await page.getTextContent();
+			const pageText = text.items
+			.map(item => ('str' in item ? item.str : ''))
+			.join(' ');
+			fullText += pageText + '\n';
+		}
 
-	// Checks if the PDF exceeds 10 pages and returns an error if it has.		
-	if (pdf.numPages > 10) {
 		return {
-			success: false,
-			message: 'PDF has more than 10 Pages.',
-		};
+			success: true,
+			context: fullText,
+		}
 	}
 	
-	let fullText = '';
-	for (let i = 1; i <= pdf.numPages; i++) {
-		const page = await pdf.getPage(i);
-		const text = await page.getTextContent();
-		const pageText = text.items
-		.map(item => ('str' in item ? item.str : ''))
-		.join(' ');
-		fullText += pageText + '\n';
-	}
-
 	return {
-		success: true,
-		context: fullText,
-	}
+		success: false,
+		message: 'parsePdf must be run in the browser.',
+	};
 }

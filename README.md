@@ -27,7 +27,9 @@ Create a .env file at the root folder of the project with the following constant
 OPEN_AI_API_KEY = "YOUR_API_KEY_HERE
 OPEN_AI_MODEL = "gpt-4o-mini"
 
+# General Configuration
 MAX_PDF_FILESIZE_MB = 25
+MAX_PDF_PAGES = 10
 ```
 
 ### Running the Project

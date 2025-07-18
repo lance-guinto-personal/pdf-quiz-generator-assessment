@@ -2,7 +2,7 @@ import openai from "@/lib/openai";
 import { zodTextFormat } from "openai/helpers/zod";
 import { z } from "zod";
 
-const questionsGenerator = async (fileID: string) => {
+const questionsGenerator = async (pdfText: string) => {
 	const MODEL = process.env.OPEN_AI_MODEL;
 	const MAX_QUESTION_NUM = 5;
 	try {
@@ -18,8 +18,9 @@ const questionsGenerator = async (fileID: string) => {
 		});
 
 		const systemPrompt = `
-		Generate **exactly ${MAX_QUESTION_NUM}** quiz questions that test understanding of the material. Do NOT use any information not explicitly in the content.
+		Uing this data: ${pdfText}
 		
+		Generate **exactly ${MAX_QUESTION_NUM}** quiz questions that test understanding of the material. Do NOT use any information not explicitly in the content.		
 		Respond with **only** a JSON array of 5 question objects using the exact format below — no extra text:
 		
 		[
@@ -46,20 +47,8 @@ const questionsGenerator = async (fileID: string) => {
 		const response = await openai.responses.parse({
 			model: MODEL,
 			input: [
-				{ role: "system", content: systemPrompt },
-				{
-					role: "user",
-					content: [
-						{
-							type: "input_file",
-							file_id: fileID,
-						},
-						{
-							type: "input_text",
-							text: `Generate ${MAX_QUESTION_NUM} quiz questions based on the content of the file.`,
-						},
-					],
-				},
+				{ role: "system", content: "You are a quiz generator" },
+				{ role: "user", content: systemPrompt }
 			],
 			text: {
 				format: zodTextFormat(QuestionsSchema, "questions"),

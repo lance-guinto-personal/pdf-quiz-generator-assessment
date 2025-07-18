@@ -3,10 +3,13 @@ import fs from 'fs';
 import path from 'path';
 import os from 'os';
 
-export default async function uploadFile(file: File): Promise<string> {
+// Depracated, as PDF.js now sends text directly to OpenAI
+// If PDF.js were to be moved to server side, it could be done here
+
+export async function uploadFile(file: File): Promise<string> {
     let tempFilePath: string | null = null;
-	const maxFileSize = process.env.MAX_PDF_FILESIZE_MB || "10";
-    
+    const MAX_FILE_SIZE = parseInt(process.env.MAX_PDF_FILESIZE_MB || "");
+	
     try {
         // Validate file
         if (!file) {
@@ -14,9 +17,9 @@ export default async function uploadFile(file: File): Promise<string> {
         }
 
         // Check file size (optional: limit to 25MB for OpenAI)
-        const maxSize = parseInt(maxFileSize) * 1024 * 1024; // 25MB
+        const maxSize = MAX_FILE_SIZE * 1024 * 1024; // 25MB
         if (file.size > maxSize) {
-            throw new Error(`File too large. Maximum size is ${maxFileSize}MB`);
+            throw new Error(`File too large. Maximum size is ${MAX_FILE_SIZE}MB`);
         }
 
         // Convert File to Buffer

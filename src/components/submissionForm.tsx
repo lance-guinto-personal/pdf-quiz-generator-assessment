@@ -40,8 +40,8 @@ function SubmissionForm() {
 				return;
 			} else {
 				// Lazy load? parsePdf due to server-side rendering issues
-				const { parsePdf } = await import("@/lib/pdfHandler");
-				const parseResult = await parsePdf(target.pdf);
+				const { parsePdfFile } = await import("@/lib/pdfHandler");
+				const parseResult = await parsePdfFile(target.pdf);
 
 				if (!parseResult.success) {
 					toast.error(`PDF parse unsuccessful. ${parseResult.message}`);
@@ -52,7 +52,7 @@ function SubmissionForm() {
 ;
 				// Send file to /api/upload-file in formData file format
 				const formData = new FormData();
-				formData.append("file", parseContext);
+				formData.append("pdftext", parseContext);
 				toast.promise(
 					fetch("/api/upload-file", {
 						method: "POST",

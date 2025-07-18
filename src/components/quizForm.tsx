@@ -21,7 +21,6 @@ function Quizzes({questions}: {questions: Question[] }) {
             id: question.id,
             isCorrect: (question.answer === option)
         }
-        console.log(userAnswer);
 
 
 		let tempAnsweredList: AnsweredQustion[];
@@ -55,7 +54,6 @@ function Quizzes({questions}: {questions: Question[] }) {
 		}
 
 		setUserScore(score);
-		console.log("Your score is" + score);
 		setSubmitVisible(false);
 		setShowScore(true);
 	}

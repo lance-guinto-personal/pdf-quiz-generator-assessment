@@ -13,7 +13,6 @@ export interface AnsweredQustion {
 	isCorrect: boolean
 }
 
-
 export function cn(...inputs: ClassValue[]) {
   	return twMerge(clsx(inputs))
 }
