@@ -5,6 +5,7 @@ import os from 'os';
 
 export default async function uploadFile(file: File): Promise<string> {
     let tempFilePath: string | null = null;
+	const maxFileSize = process.env.MAX_PDF_FILESIZE_MB || "10";
     
     try {
         // Validate file
@@ -13,9 +14,9 @@ export default async function uploadFile(file: File): Promise<string> {
         }
 
         // Check file size (optional: limit to 25MB for OpenAI)
-        const maxSize = 25 * 1024 * 1024; // 25MB
+        const maxSize = parseInt(maxFileSize) * 1024 * 1024; // 25MB
         if (file.size > maxSize) {
-            throw new Error('File too large. Maximum size is 25MB');
+            throw new Error(`File too large. Maximum size is ${maxFileSize}MB`);
         }
 
         // Convert File to Buffer
@@ -28,6 +29,8 @@ export default async function uploadFile(file: File): Promise<string> {
 
         // Create an fs.ReadStream from the file
         const readStream = fs.createReadStream(tempFilePath);
+
+		// Insert pdf.js here to set max 10 pages / eliminate sources and links?
 
         // Upload to OpenAI
         const uploadedFile = await openai.files.create({

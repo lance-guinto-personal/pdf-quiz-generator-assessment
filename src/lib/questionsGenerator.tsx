@@ -3,6 +3,8 @@ import { zodTextFormat } from "openai/helpers/zod";
 import { z } from "zod";
 
 const questionsGenerator = async (fileID: string) => {
+	const MODEL = process.env.OPEN_AI_MODEL;
+	const MAX_QUESTION_NUM = 5;
 	try {
 		const QuestionSchema = z.object({
 			id: z.number(),
@@ -16,7 +18,7 @@ const questionsGenerator = async (fileID: string) => {
 		});
 
 		const systemPrompt = `
-		Generate **exactly 5** quiz questions that test understanding of the material. Do NOT use any information not explicitly in the content.
+		Generate **exactly ${MAX_QUESTION_NUM}** quiz questions that test understanding of the material. Do NOT use any information not explicitly in the content.
 		
 		Respond with **only** a JSON array of 5 question objects using the exact format below — no extra text:
 		
@@ -36,14 +38,13 @@ const questionsGenerator = async (fileID: string) => {
 		]
 		
 		Important rules:
-		- Generate exactly 5 questions per request.
+		- Generate exactly ${MAX_QUESTION_NUM} questions per request.
 		- Each question must be unique, and cover different parts of the content.
 		- Each must have one correct answer and three plausible distractors.
-		- Do not add explanations or extra text outside the JSON array.
-			`;
+		- Do not add explanations or extra text outside the JSON array.`;
 
 		const response = await openai.responses.parse({
-			model: "gpt-4o-mini",
+			model: MODEL,
 			input: [
 				{ role: "system", content: systemPrompt },
 				{
@@ -55,7 +56,7 @@ const questionsGenerator = async (fileID: string) => {
 						},
 						{
 							type: "input_text",
-							text: "Generate 5 quiz questions based on the content of the file.",
+							text: `Generate ${MAX_QUESTION_NUM} quiz questions based on the content of the file.`,
 						},
 					],
 				},
@@ -66,7 +67,7 @@ const questionsGenerator = async (fileID: string) => {
 		});
 
 		let questions = response.output_parsed?.questions;
-		if (!questions || questions.length < 5) {
+		if (!questions || questions.length < MAX_QUESTION_NUM) {
 			throw new Error("Failed to generate questions");
 		}
 		return questions;

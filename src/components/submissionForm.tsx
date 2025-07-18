@@ -1,7 +1,13 @@
 "use client";
 
-import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card"
 import React, { useState } from "react";
 import toast from "react-hot-toast";
 import Quizzes from "./quizForm";
@@ -11,8 +17,10 @@ function SubmissionForm() {
 	const [fileID, setFileID] = useState<string | null>(null);
     const [questions, setQuestions] = useState<Question[]>([]);
 
+	// Show file upload component by default
+	const [showFileUploadCmponent, setShowFileUploadCmponent] = useState(true);
 	// Hide Quizzes component by default
-    const [showComponent, setShowComponent] = useState(false);
+    const [showQuizComponent, setShowQuizComponent] = useState(false);
 
     const handleFileChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
         const file = e.target.files?.[0];
@@ -31,6 +39,10 @@ function SubmissionForm() {
 						if (response.status === 200) {
 							setFileID(data.fileID);
 							setQuestions(data.questions);
+							// Show the quiz component when questions are ready
+							setShowQuizComponent(true);
+							// Hide the file upload bar when questions are ready
+							setShowFileUploadCmponent(false);
 							return `File ${file.name} uploaded successfully`;
 						} else {
 							throw new Error("Failed to upload file");
@@ -42,17 +54,6 @@ function SubmissionForm() {
 						error: (err) => err.message || "Failed to upload file"
 					}
 				);
-
-				// const response = await fetch
-				// const data = await response.json();
-				// if (response.status === 200) {
-				// 	// Success
-				// 	setFileID(data.fileID);
-				// 	toast.success(`File ${file.name} ${data.fileID} uploaded successfully.`);
-				// 	setShowComponent(true);
-				// } else {
-				// 	toast.error("Failed to upload file.");
-				// }
 			} else {
 				toast.error("Incorrect file. Only PDFs can be uploaded.")
 			}
@@ -61,8 +62,18 @@ function SubmissionForm() {
 
   	return (
 		<div>
-			<Input type="file" name="file" accept=".pdf" onChange={handleFileChange}/>
-			{showComponent && <Quizzes questions={questions}/>}
+			{showFileUploadCmponent && 
+				<Card className="w-full max-w-sm">
+					<CardHeader>
+						<CardTitle>Generate a Quiz from a PDF!</CardTitle>
+						<CardDescription>Click the input box below to upload a PDF file</CardDescription>
+					</CardHeader>
+					<CardContent>
+						<Input type="file" name="file" accept=".pdf" onChange={handleFileChange}/>
+					</CardContent>
+				</Card>
+			}
+			{showQuizComponent && <Quizzes questions={questions}/>}
 		</div>
   	);
 }

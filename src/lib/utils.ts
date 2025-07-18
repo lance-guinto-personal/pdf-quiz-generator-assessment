@@ -8,6 +8,11 @@ export interface Question {
     answer: string;
 }
 
+export interface AnsweredQustion {
+	id: number,
+	isCorrect: boolean
+}
+
 
 export function cn(...inputs: ClassValue[]) {
   	return twMerge(clsx(inputs))
