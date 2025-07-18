@@ -30,8 +30,6 @@ export default async function uploadFile(file: File): Promise<string> {
         // Create an fs.ReadStream from the file
         const readStream = fs.createReadStream(tempFilePath);
 
-		// Insert pdf.js here to set max 10 pages / eliminate sources and links?
-
         // Upload to OpenAI
         const uploadedFile = await openai.files.create({
             file: readStream,

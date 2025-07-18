@@ -1,6 +1,7 @@
 "use client";
 
 import { Input } from "@/components/ui/input";
+import { Button } from "@/components/ui/button";
 import {
   Card,
   CardContent,
@@ -8,28 +9,50 @@ import {
   CardHeader,
   CardTitle,
 } from "@/components/ui/card"
+import { z } from 'zod';
+import { zodResolver } from '@hookform/resolvers/zod';
 import React, { useState } from "react";
+import { useForm } from 'react-hook-form';
+import { Form, FormField, FormItem, FormLabel, FormControl } from './ui/form';
 import toast from "react-hot-toast";
 import Quizzes from "./quizForm";
 import { Question } from "@/lib/utils";
+import { assertFileIsPdf } from "@/lib/pdfHandler";
 
 function SubmissionForm() {
 	const [fileID, setFileID] = useState<string | null>(null);
     const [questions, setQuestions] = useState<Question[]>([]);
+
+	 const form = useForm<z.infer<typeof assertFileIsPdf>>({
+        resolver: zodResolver(assertFileIsPdf),
+    });
 
 	// Show file upload component by default
 	const [showFileUploadCmponent, setShowFileUploadCmponent] = useState(true);
 	// Hide Quizzes component by default
     const [showQuizComponent, setShowQuizComponent] = useState(false);
 
-    const handleFileChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
-        const file = e.target.files?.[0];
-        if (file) {
-			if (file.type == "application/pdf") {
+    // const handleFileChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
+	const handleFileChange = async (target: z.infer<typeof assertFileIsPdf>) => {
+		try {
+			if (!target.pdf) {
+				toast.error("Incorrect file. Only PDFs can be uploaded.");
+				return;
+			} else {
+				// Lazy load? parsePdf due to server-side rendering issues
+				const { parsePdf } = await import("@/lib/pdfHandler");
+				const parseResult = await parsePdf(target.pdf);
+
+				if (!parseResult.success) {
+					toast.error(`PDF parse unsuccessful. ${parseResult.message}`);
+					return;
+				}
+
+				const parseContext = parseResult.context || ""
+;
 				// Send file to /api/upload-file in formData file format
 				const formData = new FormData();
-				formData.append("file", file);
-
+				formData.append("file", parseContext);
 				toast.promise(
 					fetch("/api/upload-file", {
 						method: "POST",
@@ -43,37 +66,55 @@ function SubmissionForm() {
 							setShowQuizComponent(true);
 							// Hide the file upload bar when questions are ready
 							setShowFileUploadCmponent(false);
-							return `File ${file.name} uploaded successfully`;
+							return `PDF file uploaded successfully`;
 						} else {
-							throw new Error("Failed to upload file");
+							throw new Error("Failed to upload PDF file");
 						}
 					}),
 					{
-						loading: `Uploading ${file.name}...`,
+						loading: `Uploading PDF file...`,
 						success: (message) => message,
 						error: (err) => err.message || "Failed to upload file"
 					}
 				);
-			} else {
-				toast.error("Incorrect file. Only PDFs can be uploaded.")
 			}
-        }
+		} catch (error: any) {
+			toast.error("General error. " + error)
+		}
+        
     }
 
   	return (
-		<div>
-			{showFileUploadCmponent && 
-				<Card className="w-full max-w-sm">
+		<div className='flex flex-col gap-5'>
+		<Form {...form}>
+            <form onSubmit={form.handleSubmit(handleFileChange)}>
+				{showFileUploadCmponent && <Card>
 					<CardHeader>
 						<CardTitle>Generate a Quiz from a PDF!</CardTitle>
 						<CardDescription>Click the input box below to upload a PDF file</CardDescription>
 					</CardHeader>
 					<CardContent>
-						<Input type="file" name="file" accept=".pdf" onChange={handleFileChange}/>
+						<FormField
+						control={form.control}
+						name='pdf'
+						render={({ field }) => (
+							<FormItem>
+								<FormControl>
+									<Input type='file' accept='application/pdf' placeholder='Upload PDF file' onChange={(e) => {
+										const file = e.target.files?.[0] || null;
+										field.onChange(file);
+									}}
+									/>
+								</FormControl>
+							</FormItem>
+						)}
+						/>
+                		<Button type='submit' className="mt-2" >Generate Questions</Button>
 					</CardContent>
-				</Card>
-			}
-			{showQuizComponent && <Quizzes questions={questions}/>}
+				</Card>}
+            </form>
+        </Form>
+		{showQuizComponent && <Quizzes questions={questions}/>}
 		</div>
   	);
 }
