@@ -22,6 +22,7 @@ import { assertFileIsPdf } from "@/lib/pdfHandler";
 function SubmissionForm() {
 	const [fileID, setFileID] = useState<string | null>(null);
     const [questions, setQuestions] = useState<Question[]>([]);
+	const [isUploadDisabled, setIsUploadDisabled] = useState(false);
 
 	 const form = useForm<z.infer<typeof assertFileIsPdf>>({
         resolver: zodResolver(assertFileIsPdf),
@@ -35,15 +36,21 @@ function SubmissionForm() {
     // const handleFileChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
 	const handleFileChange = async (target: z.infer<typeof assertFileIsPdf>) => {
 		try {
+			// Disable upload button and input to prevent spamming.
+			setIsUploadDisabled(true);
 			if (!target.pdf) {
+				// Re-enable upload button and input on error
+				setIsUploadDisabled(false);
 				toast.error("Incorrect file. Only PDFs can be uploaded.");
 				return;
 			} else {
 				// Lazy load? parsePdf due to server-side rendering issues
-				const { parsePdfFile } = await import("@/lib/pdfHandler");
-				const parseResult = await parsePdfFile(target.pdf);
+				const { pdfParser } = await import("@/lib/pdfHandler");
+				const parseResult = await pdfParser(target.pdf);
 
 				if (!parseResult.success) {
+					// Re-enable upload button and input on error
+					setIsUploadDisabled(false);
 					toast.error(`PDF parse unsuccessful. ${parseResult.message}`);
 					return;
 				}
@@ -66,6 +73,7 @@ function SubmissionForm() {
 							setShowQuizComponent(true);
 							// Hide the file upload bar when questions are ready
 							setShowFileUploadCmponent(false);
+
 							return `PDF file uploaded successfully`;
 						} else {
 							throw new Error("Failed to upload PDF file");
@@ -79,6 +87,8 @@ function SubmissionForm() {
 				);
 			}
 		} catch (error: any) {
+			// Re-enable upload button and input on error
+			setIsUploadDisabled(false);
 			toast.error("General error. " + error)
 		}
         
@@ -100,7 +110,7 @@ function SubmissionForm() {
 						render={({ field }) => (
 							<FormItem>
 								<FormControl>
-									<Input type='file' accept='application/pdf' placeholder='Upload PDF file' onChange={(e) => {
+									<Input type='file' accept='application/pdf' placeholder='Upload PDF file' disabled={isUploadDisabled} onChange={(e) => {
 										const file = e.target.files?.[0] || null;
 										field.onChange(file);
 									}}
@@ -109,7 +119,7 @@ function SubmissionForm() {
 							</FormItem>
 						)}
 						/>
-                		<Button type='submit' className="mt-2" >Generate Questions</Button>
+                		<Button type='submit' className="mt-2" disabled={isUploadDisabled}>Generate Questions</Button>
 					</CardContent>
 				</Card>}
             </form>

@@ -9,7 +9,7 @@ export const assertFileIsPdf = z.object({
     })
 });
 
-export async function parsePdfFile(file: File): Promise<{success: boolean; message?: string; context?: string;}> {
+export async function pdfParser(file: File): Promise<{success: boolean; message?: string; context?: string;}> {
 	const MAX_PAGES = parseInt(process.env.MAX_PDF_PAGES || "");
 	const isBrowser = typeof window !== "undefined";
 
@@ -23,28 +23,31 @@ export async function parsePdfFile(file: File): Promise<{success: boolean; messa
 		if (pdf.numPages > MAX_PAGES) {
 			return {
 				success: false,
-				message: 'PDF must not have more than 10 Pages.',
+				message: `PDF must not have more than ${MAX_PAGES} Pages.`,
 			};
 		}
-		
-		let fullText = '';
+
+		// Get all contents from all pages		
+		let assembledText = "";
 		for (let i = 1; i <= pdf.numPages; i++) {
 			const page = await pdf.getPage(i);
 			const text = await page.getTextContent();
-			const pageText = text.items
-			.map(item => ('str' in item ? item.str : ''))
-			.join(' ');
-			fullText += pageText + '\n';
+			text.items.forEach(item => {
+				if ("str" in item) {
+					assembledText += item.str + " ";
+				}
+			});
+			assembledText += '\n';
 		}
 
 		return {
 			success: true,
-			context: fullText,
+			context: assembledText,
 		}
 	}
 	
 	return {
 		success: false,
-		message: 'parsePdf must be run in the browser.',
+		message: 'pdfParser must be run in the browser.',
 	};
 }
